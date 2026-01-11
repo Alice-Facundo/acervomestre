@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Download, FileText, Eye, Link as LinkIcon, StickyNote } from 'lucide-react';
+import { Plus, Download, FileText, Eye, Link as LinkIcon, StickyNote, Heart } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import './ConteudoRecurso.css';
 
@@ -18,6 +18,7 @@ interface Recurso {
   tamanho_bytes?: number;
   conteudo_markdown?: string;
   visualizacoes: number;
+  curtidas: number; 
   descricao: string;
   tags?: Tag[];
 }
@@ -30,6 +31,7 @@ const MainContent: React.FC<MainContentProps> = ({ conteudoId }) => {
   const [recurso, setRecurso] = useState<Recurso | null>(null);
   const [autor, setAutor] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
+  const [liked, setLiked] = useState<boolean>(false); 
 
   const formatarLinkExterno = (url: string): string => {
     if (!url) return "#";
@@ -67,6 +69,28 @@ const MainContent: React.FC<MainContentProps> = ({ conteudoId }) => {
 
     if (conteudoId) fetchData();
   }, [conteudoId]);
+
+  const handleLike = async () => {
+    const token = localStorage.getItem('token_acervo');
+    try {
+      const res = await fetch(`https://acervomestrebackend.onrender.com/recursos/${conteudoId}/like`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.ok && recurso) {
+        const novoStatusLike = !liked;
+        setLiked(novoStatusLike);
+        
+        setRecurso({
+          ...recurso,
+          curtidas: novoStatusLike ? recurso.curtidas + 1 : recurso.curtidas - 1
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao processar like:", error);
+    }
+  };
 
   const handleDownload = async () => {
     if (!recurso?.link_acesso) {
@@ -136,7 +160,6 @@ const MainContent: React.FC<MainContentProps> = ({ conteudoId }) => {
               <div className="file-info">
                 <span className="file-type">Link Externo</span>
                 <h3>Acessar Recurso</h3>
-                {/* Correção aplicada no href abaixo: */}
                 <a 
                   href={formatarLinkExterno(recurso.link_acesso)} 
                   target="_blank" 
@@ -166,10 +189,37 @@ const MainContent: React.FC<MainContentProps> = ({ conteudoId }) => {
       <div className="resource-card">
         <div className="actions-row">
           <div className="action-btns">
-            <button className="btn-outline"><Plus size={20} /> Add to Playlist</button>
+            <button 
+              className="btn-outline" 
+              onClick={handleLike}
+              style={{ 
+                color: liked ? '#DC3545' : 'inherit', 
+                borderColor: liked ? '#DC3545' : 'inherit',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Heart 
+                size={20} 
+                fill={liked ? "#DC3545" : "none"} 
+                color={liked ? "#DC3545" : "currentColor"}
+              /> 
+              {liked ? 'Curtido' : 'Like'}
+            </button>
+            <button className="btn-outline">
+              <Plus size={20} /> Add to Playlist
+            </button>
           </div>
           <div className="stats-info">
-            <span><Eye size={20} /> {recurso.visualizacoes} views</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <Heart size={18} fill={recurso.curtidas > 0 ? "#DC3545" : "none"} color={recurso.curtidas > 0 ? "#DC3545" : "currentColor"} /> 
+              {recurso.curtidas} curtidas
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <Eye size={18} /> {recurso.visualizacoes} visualizações
+            </span>
           </div>
         </div>
       </div>
