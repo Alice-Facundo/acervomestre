@@ -1,11 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Upload } from "lucide-react";
 import { createRecurso } from "../services/api";
+
+const API_URL = 'https://acervomestrebackend.onrender.com';
 
 interface AddResourceModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+}
+
+interface Tag {
+  id: number;
+  nome: string;
 }
 
 type TabType = "file-upload" | "external-link" | "simple-note";
@@ -16,19 +23,40 @@ export function AddResourceModal({ isOpen, onClose, onSuccess }: AddResourceModa
   const [description, setDescription] = useState("");
   const [url, setUrl] = useState("");
   const [content, setContent] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]); // Armazenando IDs como string para a API
+  const [dbTags, setDbTags] = useState<Tag[]>([]);
   const [isPublic, setIsPublic] = useState(true);
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const subjectTags = ["Matemática", "Português", "Física", "Química", "História", "Literatura"];
-  const typeTags = ["PDF", "Vídeo", "1º Ano", "2º Ano", "3º Ano"];
+  // Busca as tags do banco de dados quando o modal abre
+  useEffect(() => {
+    if (isOpen) {
+      const fetchTags = async () => {
+        try {
+          const token = localStorage.getItem('accessToken');
+          const headers = {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          };
+          const response = await fetch(`${API_URL}/tags/get_all`, { headers });
+          if (response.ok) {
+            const data = await response.json();
+            setDbTags(Array.isArray(data) ? data : data.items || []);
+          }
+        } catch (error) {
+          console.error("Erro ao carregar tags:", error);
+        }
+      };
+      fetchTags();
+    }
+  }, [isOpen]);
 
-  const handleTagToggle = (tag: string) => {
+  const handleTagToggle = (tagId: string) => {
     setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+      prev.includes(tagId) ? prev.filter((t) => t !== tagId) : [...prev, tagId]
     );
   };
 
@@ -63,13 +91,11 @@ export function AddResourceModal({ isOpen, onClose, onSuccess }: AddResourceModa
     setIsSubmitting(true);
 
     try {
-      // Map activeTab to estrutura
       let estrutura: 'UPLOAD' | 'URL' | 'NOTA';
       if (activeTab === 'file-upload') estrutura = 'UPLOAD';
       else if (activeTab === 'external-link') estrutura = 'URL';
       else estrutura = 'NOTA';
 
-      // Validate required fields
       if (!title.trim()) {
         setError('Título é obrigatório');
         setIsSubmitting(false);
@@ -177,7 +203,6 @@ export function AddResourceModal({ isOpen, onClose, onSuccess }: AddResourceModa
 
         {/* Content */}
         <div className="p-6 space-y-6">
-          {/* File Upload Tab */}
           {activeTab === "file-upload" && (
             <div>
               <div
@@ -213,7 +238,6 @@ export function AddResourceModal({ isOpen, onClose, onSuccess }: AddResourceModa
             </div>
           )}
 
-          {/* External Link Tab */}
           {activeTab === "external-link" && (
             <div>
               <label className="block text-sm mb-2">URL</label>
@@ -227,7 +251,6 @@ export function AddResourceModal({ isOpen, onClose, onSuccess }: AddResourceModa
             </div>
           )}
 
-          {/* Simple Note Tab */}
           {activeTab === "simple-note" && (
             <div>
               <label className="block text-sm mb-2">Conteúdo (Markdown)</label>
@@ -240,7 +263,6 @@ export function AddResourceModal({ isOpen, onClose, onSuccess }: AddResourceModa
             </div>
           )}
 
-          {/* Common Fields */}
           <div>
             <label className="block text-sm mb-2">Título</label>
             <input
@@ -264,42 +286,30 @@ export function AddResourceModal({ isOpen, onClose, onSuccess }: AddResourceModa
             />
           </div>
 
-          {/* Tags */}
+          {/* Tags vindas do DB */}
           <div>
             <label className="block text-sm mb-3">Tags</label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {subjectTags.map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => handleTagToggle(tag)}
-                  className={`px-3 py-1 text-sm rounded border transition-colors ${
-                    selectedTags.includes(tag)
-                      ? "bg-teal-50 border-teal-600 text-teal-700"
-                      : "bg-white border-gray-300 text-gray-700 hover:border-gray-400"
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {typeTags.map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => handleTagToggle(tag)}
-                  className={`px-3 py-1 text-sm rounded border transition-colors ${
-                    selectedTags.includes(tag)
-                      ? "bg-teal-50 border-teal-600 text-teal-700"
-                      : "bg-white border-gray-300 text-gray-700 hover:border-gray-400"
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
+            <div className="flex flex-wrap gap-2 mb-2 max-h-40 overflow-y-auto p-1">
+              {dbTags.length > 0 ? (
+                dbTags.map((tag) => (
+                  <button
+                    key={tag.id}
+                    onClick={() => handleTagToggle(tag.id.toString())}
+                    className={`px-3 py-1 text-sm rounded border transition-colors ${
+                      selectedTags.includes(tag.id.toString())
+                        ? "bg-teal-50 border-teal-600 text-teal-700"
+                        : "bg-white border-gray-300 text-gray-700 hover:border-gray-400"
+                    }`}
+                  >
+                    {tag.nome}
+                  </button>
+                ))
+              ) : (
+                <span className="text-xs text-gray-400 italic">Carregando tags...</span>
+              )}
             </div>
           </div>
 
-          {/* Privacy Toggle */}
           <div className="flex items-center justify-between p-4 border border-gray-200 rounded">
             <div>
               <div className="text-sm">Privacidade</div>

@@ -8,13 +8,10 @@ interface Tag {
   nome: string;
 }
 
-const initialFormats = ['PDF', 'Vídeo', 'Apresentação', 'Documento', 'Link'];
-
 export function MetadataManagement() {
-  const [subjects, setSubjects] = useState<string[]>([]);
-  const [formats, setFormats] = useState(initialFormats);
-  const [newSubject, setNewSubject] = useState('');
-  const [newFormat, setNewFormat] = useState('');
+  // Alterado para armazenar objetos Tag para termos acesso ao ID
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [newTagName, setNewTagName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -33,20 +30,23 @@ export function MetadataManagement() {
       const response = await fetch(`${API_URL}/tags/get_all`, { headers });
       if (response.ok) {
         const data = await response.json();
-        if (Array.isArray(data)) {
-          setSubjects(data.map((tag: Tag) => tag.nome));
+        // Ajuste para lidar com respostas paginadas ou listas simples
+        const tagsList = Array.isArray(data) ? data : data.items;
+        if (tagsList) {
+          setTags(tagsList);
         }
       }
     } catch (error) {
-      console.error(error);
+      console.error('Erro ao buscar tags:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleAddSubject = async () => {
-    const term = newSubject.trim();
-    if (term && !subjects.includes(term)) {
+  const handleAddTag = async () => {
+    const term = newTagName.trim();
+    // Evita duplicados no estado local antes de enviar
+    if (term && !tags.some(t => t.nome.toLowerCase() === term.toLowerCase())) {
       try {
         const token = localStorage.getItem('accessToken');
         const headers = {
@@ -61,9 +61,9 @@ export function MetadataManagement() {
         });
 
         if (response.ok) {
-          const data = await response.json();
-          setSubjects([...subjects, data.nome]);
-          setNewSubject('');
+          const createdTag = await response.json();
+          setTags([...tags, createdTag]);
+          setNewTagName('');
         } else {
           console.error('Erro ao criar tag');
         }
@@ -73,51 +73,53 @@ export function MetadataManagement() {
     }
   };
 
-  const handleAddFormat = () => {
-    if (newFormat.trim() && !formats.includes(newFormat.trim())) {
-      setFormats([...formats, newFormat.trim()]);
-      setNewFormat('');
+  const handleRemoveTag = async (tagId: number) => {
+    if (!window.confirm("Tem certeza que deseja excluir esta tag?")) return;
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`${API_URL}/tags/delete/${tagId}`, {
+        method: 'DELETE',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
+      });
+
+      if (response.ok) {
+        // Remove do estado local apenas após confirmação do banco
+        setTags(tags.filter((t) => t.id !== tagId));
+      } else {
+        const errorData = await response.json();
+        alert(`Erro ao deletar: ${errorData.detail || 'A tag pode estar em uso.'}`);
+      }
+    } catch (error) {
+      console.error('Erro ao deletar tag:', error);
     }
   };
 
-  const handleRemoveSubject = (subject: string) => {
-    setSubjects(subjects.filter((s) => s !== subject));
-  };
-
-  const handleRemoveFormat = (format: string) => {
-    setFormats(formats.filter((f) => f !== format));
-  };
-
-  const handleKeyDownSubject = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleAddSubject();
-    }
-  };
-
-  const handleKeyDownFormat = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAddFormat();
+      handleAddTag();
     }
   };
 
   return (
     <div className="space-y-8">
       <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Matérias (Tags)</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Gerenciar Tags</h2>
 
         <div className="flex gap-2 mb-4">
           <input
             type="text"
-            value={newSubject}
-            onChange={(e) => setNewSubject(e.target.value)}
-            onKeyDown={handleKeyDownSubject}
-            placeholder="Nova matéria..."
+            value={newTagName}
+            onChange={(e) => setNewTagName(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Nova tag..."
             className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
           <button
-            onClick={handleAddSubject}
+            onClick={handleAddTag}
             className="p-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
           >
             <Plus className="w-5 h-5" />
@@ -130,64 +132,27 @@ export function MetadataManagement() {
           </div>
         ) : (
           <div className="flex flex-wrap gap-2">
-            {subjects.length === 0 ? (
+            {tags.length === 0 ? (
               <span className="text-gray-500 text-sm italic">Nenhuma tag cadastrada.</span>
             ) : (
-              subjects.map((subject) => (
+              tags.map((tag) => (
                 <div
-                  key={subject}
+                  key={tag.id}
                   className="group flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 >
-                  <span className="text-sm text-gray-700">{subject}</span>
+                  <span className="text-sm text-gray-700">{tag.nome}</span>
                   <button
-                    onClick={() => handleRemoveSubject(subject)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => handleRemoveTag(tag.id)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-300 rounded-full"
+                    title="Excluir tag do banco"
                   >
-                    <X className="w-3.5 h-3.5 text-gray-500 hover:text-gray-700" />
+                    <X className="w-3.5 h-3.5 text-red-500 hover:text-red-700" />
                   </button>
                 </div>
               ))
             )}
           </div>
         )}
-      </div>
-
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Formatos</h2>
-
-        <div className="flex gap-2 mb-4">
-          <input
-            type="text"
-            value={newFormat}
-            onChange={(e) => setNewFormat(e.target.value)}
-            onKeyDown={handleKeyDownFormat}
-            placeholder="Novo formato..."
-            className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-          />
-          <button
-            onClick={handleAddFormat}
-            className="p-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
-          >
-            <Plus className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {formats.map((format) => (
-            <div
-              key={format}
-              className="group flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              <span className="text-sm text-gray-700">{format}</span>
-              <button
-                onClick={() => handleRemoveFormat(format)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X className="w-3.5 h-3.5 text-gray-500 hover:text-gray-700" />
-              </button>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );

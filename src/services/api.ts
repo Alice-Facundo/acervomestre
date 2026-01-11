@@ -1,12 +1,12 @@
 const API_BASE_URL = 'https://acervomestrebackend.onrender.com';
 
-// Helper to get auth token (adjust based on your auth implementation)
+// Busca o token usando a chave exata salva no localStorage
 const getAuthToken = (): string | null => {
-  return localStorage.getItem('access_token');
+  return localStorage.getItem('accessToken');
 };
 
-// Helper to create headers with authentication
-const getHeaders = (contentType: string = 'application/json'): HeadersInit => {
+// Helper para criar headers - o Content-Type agora é opcional para evitar erros com FormData ou DELETE
+const getHeaders = (contentType?: string): HeadersInit => {
   const headers: HeadersInit = {};
   
   if (contentType) {
@@ -33,19 +33,7 @@ export interface CreateRecursoData {
   conteudo_markdown?: string;
 }
 
-export interface DeleteRecursoResponse {
-  success: boolean;
-}
-
-export interface AddToPlaylistData {
-  recurso_id: number;
-}
-
-export interface RemoveFromPlaylistResponse {
-  success: boolean;
-}
-
-// Create a new recurso
+// Criar um novo recurso usando FormData para suportar arquivos
 export const createRecurso = async (data: CreateRecursoData) => {
   const formData = new FormData();
   
@@ -67,7 +55,6 @@ export const createRecurso = async (data: CreateRecursoData) => {
     });
   }
   
-  // Add specific fields based on estrutura type
   if (data.estrutura === 'UPLOAD' && data.file) {
     formData.append('file', data.file);
   } else if (data.estrutura === 'URL' && data.url_externa) {
@@ -80,7 +67,7 @@ export const createRecurso = async (data: CreateRecursoData) => {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${getAuthToken()}`,
-      // Don't set Content-Type header - browser will set it with boundary for FormData
+      // O navegador define o Content-Type automaticamente com o boundary correto para FormData
     },
     body: formData,
   });
@@ -93,11 +80,11 @@ export const createRecurso = async (data: CreateRecursoData) => {
   return response.json();
 };
 
-// Delete a recurso
+// Deletar um recurso
 export const deleteRecurso = async (recursoId: number): Promise<void> => {
   const response = await fetch(`${API_BASE_URL}/recursos/delete/${recursoId}`, {
     method: 'DELETE',
-    headers: getHeaders(),
+    headers: getHeaders(), // Apenas Authorization
   });
   
   if (!response.ok) {
@@ -106,7 +93,7 @@ export const deleteRecurso = async (recursoId: number): Promise<void> => {
   }
 };
 
-// Add recurso to playlist
+// Adicionar recurso à playlist
 export const addRecursoToPlaylist = async (
   playlistId: string,
   recursoId: number
@@ -115,7 +102,7 @@ export const addRecursoToPlaylist = async (
     `${API_BASE_URL}/playlists/add_recurso/${playlistId}`,
     {
       method: 'POST',
-      headers: getHeaders(),
+      headers: getHeaders('application/json'), // Define explicitamente para JSON
       body: JSON.stringify({ recurso_id: recursoId }),
     }
   );
@@ -128,7 +115,7 @@ export const addRecursoToPlaylist = async (
   return response.json();
 };
 
-// Remove recurso from playlist
+// Remover recurso da playlist
 export const removeRecursoFromPlaylist = async (
   playlistId: string,
   recursoId: number
@@ -147,7 +134,7 @@ export const removeRecursoFromPlaylist = async (
   }
 };
 
-// Get all playlists (for dropdown in AddToPlaylistModal)
+// Buscar todas as playlists
 export const getAllPlaylists = async () => {
   const response = await fetch(
     `${API_BASE_URL}/playlists/get_all?page=1&per_page=100`,
@@ -165,7 +152,7 @@ export const getAllPlaylists = async () => {
   return response.json();
 };
 
-// Get all tags (for tag selection in resource modals)
+// Buscar todas as tags
 export const getAllTags = async () => {
   const response = await fetch(`${API_BASE_URL}/tags/get_all`, {
     method: 'GET',
