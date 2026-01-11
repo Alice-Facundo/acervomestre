@@ -262,6 +262,7 @@ export function Profile({ onPlaylistClick }: { onPlaylistClick: () => void }) {
         onClose={() => setIsRemoveModalOpen(false)}
         resourceTitle={selectedResource?.title || ''}
         resourceAuthor={selectedResource?.author || ''}
+        resourceId={selectedResource?.id ? parseInt(selectedResource.id) : undefined}
         onConfirmRemove={handleConfirmRemove}
       />
       
@@ -269,6 +270,7 @@ export function Profile({ onPlaylistClick }: { onPlaylistClick: () => void }) {
         isOpen={isAddToPlaylistModalOpen}
         onClose={() => setIsAddToPlaylistModalOpen(false)}
         resourceTitle={selectedResource?.title || ''}
+        resourceId={selectedResource?.id ? parseInt(selectedResource.id) : undefined}
         onAddToPlaylist={handleAddToPlaylist}
       />
     </div>

@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { X, Upload } from "lucide-react";
+import { createRecurso } from "../services/api";
 
 interface AddResourceModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
 type TabType = "file-upload" | "external-link" | "simple-note";
 
-export function AddResourceModal({ isOpen, onClose }: AddResourceModalProps) {
+export function AddResourceModal({ isOpen, onClose, onSuccess }: AddResourceModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>("file-upload");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -17,6 +19,9 @@ export function AddResourceModal({ isOpen, onClose }: AddResourceModalProps) {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isPublic, setIsPublic] = useState(true);
   const [dragActive, setDragActive] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const subjectTags = ["Matemática", "Português", "Física", "Química", "História", "Literatura"];
   const typeTags = ["PDF", "Vídeo", "1º Ano", "2º Ano", "3º Ano"];
@@ -41,13 +46,83 @@ export function AddResourceModal({ isOpen, onClose }: AddResourceModalProps) {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    // Handle file drop logic here
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setSelectedFile(e.dataTransfer.files[0]);
+    }
   };
 
-  const handleSubmit = () => {
-    // Handle form submission for adding new resource
-    console.log("Adding new resource:", { activeTab, title, description, url, content, selectedTags, isPublic });
-    onClose();
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  const handleSubmit = async () => {
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      // Map activeTab to estrutura
+      let estrutura: 'UPLOAD' | 'URL' | 'NOTA';
+      if (activeTab === 'file-upload') estrutura = 'UPLOAD';
+      else if (activeTab === 'external-link') estrutura = 'URL';
+      else estrutura = 'NOTA';
+
+      // Validate required fields
+      if (!title.trim()) {
+        setError('Título é obrigatório');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (estrutura === 'UPLOAD' && !selectedFile) {
+        setError('Por favor, selecione um arquivo');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (estrutura === 'URL' && !url.trim()) {
+        setError('URL é obrigatória');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (estrutura === 'NOTA' && !content.trim()) {
+        setError('Conteúdo é obrigatório');
+        setIsSubmitting(false);
+        return;
+      }
+
+      await createRecurso({
+        titulo: title,
+        descricao: description,
+        estrutura,
+        visibilidade: isPublic ? 'PUBLICO' : 'PRIVADO',
+        is_destaque: false,
+        tag_ids: selectedTags,
+        file: selectedFile || undefined,
+        url_externa: estrutura === 'URL' ? url : undefined,
+        conteudo_markdown: estrutura === 'NOTA' ? content : undefined,
+      });
+
+      // Reset form
+      setTitle('');
+      setDescription('');
+      setUrl('');
+      setContent('');
+      setSelectedTags([]);
+      setIsPublic(true);
+      setSelectedFile(null);
+      setError(null);
+
+      if (onSuccess) onSuccess();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao criar recurso');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -104,21 +179,37 @@ export function AddResourceModal({ isOpen, onClose }: AddResourceModalProps) {
         <div className="p-6 space-y-6">
           {/* File Upload Tab */}
           {activeTab === "file-upload" && (
-            <div
-              className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
-                dragActive ? "border-teal-600 bg-teal-50" : "border-gray-300 bg-gray-50"
-              }`}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-            >
-              <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-              <p className="text-gray-700 mb-2">Arraste e solte seu arquivo aqui</p>
-              <p className="text-sm text-gray-500 mb-4">ou clique para procurar</p>
-              <button className="px-6 py-2 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50 transition-colors">
-                Procurar Arquivos
-              </button>
+            <div>
+              <div
+                className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
+                  dragActive ? "border-teal-600 bg-teal-50" : "border-gray-300 bg-gray-50"
+                }`}
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+              >
+                <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-700 mb-2">Arraste e solte seu arquivo aqui</p>
+                <p className="text-sm text-gray-500 mb-4">ou clique para procurar</p>
+                <input
+                  type="file"
+                  id="file-input"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
+                <label
+                  htmlFor="file-input"
+                  className="px-6 py-2 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50 transition-colors cursor-pointer inline-block"
+                >
+                  Procurar Arquivos
+                </label>
+              </div>
+              {selectedFile && (
+                <p className="mt-2 text-sm text-gray-600">
+                  Arquivo selecionado: {selectedFile.name}
+                </p>
+              )}
             </div>
           )}
 
@@ -230,19 +321,28 @@ export function AddResourceModal({ isOpen, onClose }: AddResourceModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 p-6 border-t">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="px-6 py-2 text-sm text-white bg-teal-600 hover:bg-teal-700 rounded transition-colors"
-          >
-            Adicionar Recurso
-          </button>
+        <div className="p-6 border-t">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+              {error}
+            </div>
+          )}
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="px-6 py-2 text-sm text-white bg-teal-600 hover:bg-teal-700 rounded transition-colors disabled:opacity-50"
+            >
+              {isSubmitting ? 'Adicionando...' : 'Adicionar Recurso'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
