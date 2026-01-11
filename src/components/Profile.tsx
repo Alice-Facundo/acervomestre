@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { Edit, Plus } from 'lucide-react';
 import { ResourceCard } from './ResourceCard';
 import { PlaylistCard } from './PlaylistCard';
+import { ResourceModal } from './ResourceModal';
+import { RemoveResourceModal } from './RemoveResourceModal';
+import { AddToPlaylistModal } from './AddToPlaylistModal';
 import type { Resource, Playlist } from './types';
 
 // REMOVIDO: import profileImage from 'figma:asset/...'
@@ -137,6 +140,30 @@ const userPlaylists: Playlist[] = [
 
 export function Profile({ onPlaylistClick }: { onPlaylistClick: () => void }) {
   const [activeTab, setActiveTab] = useState<'resources' | 'playlists'>('resources');
+  const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
+  const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
+  const [isAddToPlaylistModalOpen, setIsAddToPlaylistModalOpen] = useState(false);
+  const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
+
+  const handleRemoveClick = (resource: Resource) => {
+    setSelectedResource(resource);
+    setIsRemoveModalOpen(true);
+  };
+
+  const handleAddToPlaylistClick = (resource: Resource) => {
+    setSelectedResource(resource);
+    setIsAddToPlaylistModalOpen(true);
+  };
+
+  const handleConfirmRemove = () => {
+    console.log('Removing resource:', selectedResource);
+    // Add your remove logic here
+  };
+
+  const handleAddToPlaylist = (playlistId: string) => {
+    console.log('Adding resource to playlist:', selectedResource, playlistId);
+    // Add your add to playlist logic here
+  };
 
   return (
     <div className="p-8">
@@ -189,7 +216,10 @@ export function Profile({ onPlaylistClick }: { onPlaylistClick: () => void }) {
       {/* Action Button */}
       <div className="flex justify-end mb-6">
         {activeTab === 'resources' ? (
-          <button className="flex items-center gap-2 px-4 py-2 bg-teal-700 text-white rounded-lg hover:bg-teal-800 transition-colors">
+          <button 
+            onClick={() => setIsResourceModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-teal-700 text-white rounded-lg hover:bg-teal-800 transition-colors"
+          >
             <Plus className="w-5 h-5" />
             Adicionar Recurso
           </button>
@@ -205,7 +235,12 @@ export function Profile({ onPlaylistClick }: { onPlaylistClick: () => void }) {
       {activeTab === 'resources' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {userResources.map((resource) => (
-            <ResourceCard key={resource.id} resource={resource} />
+            <ResourceCard 
+              key={resource.id} 
+              resource={resource}
+              onRemoveClick={handleRemoveClick}
+              onAddToPlaylistClick={handleAddToPlaylistClick}
+            />
           ))}
         </div>
       ) : (
@@ -215,6 +250,27 @@ export function Profile({ onPlaylistClick }: { onPlaylistClick: () => void }) {
           ))}
         </div>
       )}
+
+      {/* Modals */}
+      <ResourceModal 
+        isOpen={isResourceModalOpen}
+        onClose={() => setIsResourceModalOpen(false)}
+      />
+      
+      <RemoveResourceModal
+        isOpen={isRemoveModalOpen}
+        onClose={() => setIsRemoveModalOpen(false)}
+        resourceTitle={selectedResource?.title || ''}
+        resourceAuthor={selectedResource?.author || ''}
+        onConfirmRemove={handleConfirmRemove}
+      />
+      
+      <AddToPlaylistModal
+        isOpen={isAddToPlaylistModalOpen}
+        onClose={() => setIsAddToPlaylistModalOpen(false)}
+        resourceTitle={selectedResource?.title || ''}
+        onAddToPlaylist={handleAddToPlaylist}
+      />
     </div>
   );
 }

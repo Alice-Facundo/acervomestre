@@ -1,5 +1,9 @@
+import { useState } from 'react';
 import { Search, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ResourceCard } from './ResourceCard';
+import { ResourceModal } from './ResourceModal';
+import { RemoveResourceModal } from './RemoveResourceModal';
+import { AddToPlaylistModal } from './AddToPlaylistModal';
 import type { Resource } from './types';
 
 const categories = [
@@ -132,6 +136,31 @@ const mostSavedResources: Resource[] = [
 ];
 
 export function Home() {
+  const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
+  const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
+  const [isAddToPlaylistModalOpen, setIsAddToPlaylistModalOpen] = useState(false);
+  const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
+
+  const handleRemoveClick = (resource: Resource) => {
+    setSelectedResource(resource);
+    setIsRemoveModalOpen(true);
+  };
+
+  const handleAddToPlaylistClick = (resource: Resource) => {
+    setSelectedResource(resource);
+    setIsAddToPlaylistModalOpen(true);
+  };
+
+  const handleConfirmRemove = () => {
+    console.log('Removing resource:', selectedResource);
+    // Add your remove logic here
+  };
+
+  const handleAddToPlaylist = (playlistId: string) => {
+    console.log('Adding resource to playlist:', selectedResource, playlistId);
+    // Add your add to playlist logic here
+  };
+
   return (
     <div className="p-8">
       {/* Search and Categories */}
@@ -157,7 +186,10 @@ export function Home() {
             ))}
           </div>
 
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-teal-700 text-white rounded-lg hover:bg-teal-800 transition-colors whitespace-nowrap">
+          <button 
+            onClick={() => setIsResourceModalOpen(true)}
+            className="flex items-center gap-2 px-5 py-2.5 bg-teal-700 text-white rounded-lg hover:bg-teal-800 transition-colors whitespace-nowrap"
+          >
             <Plus className="w-5 h-5" />
             Adicionar Recurso
           </button>
@@ -180,7 +212,12 @@ export function Home() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {highlightedResources.map((resource) => (
-            <ResourceCard key={resource.id} resource={resource} />
+            <ResourceCard 
+              key={resource.id} 
+              resource={resource}
+              onRemoveClick={handleRemoveClick}
+              onAddToPlaylistClick={handleAddToPlaylistClick}
+            />
           ))}
         </div>
       </section>
@@ -201,10 +238,36 @@ export function Home() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {mostSavedResources.map((resource) => (
-            <ResourceCard key={resource.id} resource={resource} />
+            <ResourceCard 
+              key={resource.id} 
+              resource={resource}
+              onRemoveClick={handleRemoveClick}
+              onAddToPlaylistClick={handleAddToPlaylistClick}
+            />
           ))}
         </div>
       </section>
+
+      {/* Modals */}
+      <ResourceModal 
+        isOpen={isResourceModalOpen}
+        onClose={() => setIsResourceModalOpen(false)}
+      />
+      
+      <RemoveResourceModal
+        isOpen={isRemoveModalOpen}
+        onClose={() => setIsRemoveModalOpen(false)}
+        resourceTitle={selectedResource?.title || ''}
+        resourceAuthor={selectedResource?.author || ''}
+        onConfirmRemove={handleConfirmRemove}
+      />
+      
+      <AddToPlaylistModal
+        isOpen={isAddToPlaylistModalOpen}
+        onClose={() => setIsAddToPlaylistModalOpen(false)}
+        resourceTitle={selectedResource?.title || ''}
+        onAddToPlaylist={handleAddToPlaylist}
+      />
     </div>
   );
 }

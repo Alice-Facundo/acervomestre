@@ -3,9 +3,11 @@ import type { Resource } from './types';
 
 interface ResourceCardProps {
   resource: Resource;
+  onRemoveClick?: (resource: Resource) => void;
+  onAddToPlaylistClick?: (resource: Resource) => void;
 }
 
-export function ResourceCard({ resource }: ResourceCardProps) {
+export function ResourceCard({ resource, onRemoveClick, onAddToPlaylistClick }: ResourceCardProps) {
   const getIcon = () => {
     switch (resource.icon) {
       case 'download':
@@ -37,10 +39,22 @@ export function ResourceCard({ resource }: ResourceCardProps) {
             <button className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">
               Visualizar
             </button>
-            <button className="p-2 hover:bg-gray-100 rounded transition-colors">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddToPlaylistClick?.(resource);
+              }}
+              className="p-2 hover:bg-gray-100 rounded transition-colors"
+            >
               <Bookmark className="w-4 h-4 text-gray-600" />
             </button>
-            <button className="p-2 hover:bg-gray-100 rounded transition-colors">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemoveClick?.(resource);
+              }}
+              className="p-2 hover:bg-gray-100 rounded transition-colors"
+            >
               <Trash2 className="w-4 h-4 text-red-500" />
             </button>
           </div>
@@ -106,10 +120,22 @@ export function ResourceCard({ resource }: ResourceCardProps) {
           </div>
 
           <div className="flex items-center gap-1">
-            <button className="p-1 hover:bg-gray-100 rounded transition-colors">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddToPlaylistClick?.(resource);
+              }}
+              className="p-1 hover:bg-gray-100 rounded transition-colors"
+            >
               <Bookmark className="w-4 h-4 text-gray-600" />
             </button>
-            <button className="p-1 hover:bg-gray-100 rounded transition-colors">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemoveClick?.(resource);
+              }}
+              className="p-1 hover:bg-gray-100 rounded transition-colors"
+            >
               <Trash2 className="w-4 h-4 text-red-500" />
             </button>
           </div>
