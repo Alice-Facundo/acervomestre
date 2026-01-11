@@ -76,7 +76,7 @@ export function ResourceModal({ isOpen, onClose }: ResourceModalProps) {
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
-            File Upload
+            Upload de Arquivo
           </button>
           <button
             onClick={() => setActiveTab("external-link")}
@@ -86,7 +86,7 @@ export function ResourceModal({ isOpen, onClose }: ResourceModalProps) {
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
-            External Link
+            Link Externo
           </button>
           <button
             onClick={() => setActiveTab("simple-note")}
@@ -96,7 +96,7 @@ export function ResourceModal({ isOpen, onClose }: ResourceModalProps) {
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
-            Simple Note
+            Nota Simples
           </button>
         </div>
 
@@ -114,10 +114,10 @@ export function ResourceModal({ isOpen, onClose }: ResourceModalProps) {
               onDrop={handleDrop}
             >
               <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-              <p className="text-gray-700 mb-2">Drag & drop your file here</p>
-              <p className="text-sm text-gray-500 mb-4">or click to browse</p>
+              <p className="text-gray-700 mb-2">Arraste e solte seu arquivo aqui</p>
+              <p className="text-sm text-gray-500 mb-4">ou clique para procurar</p>
               <button className="px-6 py-2 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50 transition-colors">
-                Browse Files
+                Procurar Arquivos
               </button>
             </div>
           )}
@@ -139,7 +139,7 @@ export function ResourceModal({ isOpen, onClose }: ResourceModalProps) {
           {/* Simple Note Tab */}
           {activeTab === "simple-note" && (
             <div>
-              <label className="block text-sm mb-2">Content (Markdown)</label>
+              <label className="block text-sm mb-2">Conteúdo (Markdown)</label>
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
@@ -151,24 +151,24 @@ export function ResourceModal({ isOpen, onClose }: ResourceModalProps) {
 
           {/* Common Fields */}
           <div>
-            <label className="block text-sm mb-2">Title</label>
+            <label className="block text-sm mb-2">Título</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter the resource title"
+              placeholder="Digite o título do recurso"
               className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
           </div>
 
           <div>
             <label className="block text-sm mb-2">
-              Description <span className="text-gray-500">(optional)</span>
+              Descrição <span className="text-gray-500">(opcional)</span>
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Add a brief description of the resource..."
+              placeholder="Adicione uma breve descrição do recurso..."
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[100px]"
             />
           </div>
@@ -235,13 +235,13 @@ export function ResourceModal({ isOpen, onClose }: ResourceModalProps) {
             onClick={onClose}
             className="px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors"
           >
-            Cancel
+            Cancelar
           </button>
           <button
             onClick={handleSubmit}
             className="px-6 py-2 text-sm text-white bg-teal-600 hover:bg-teal-700 rounded transition-colors"
           >
-            {activeTab === "file-upload" ? "Salvar Alterações" : "Save Resource"}
+            Salvar Recurso
           </button>
         </div>
       </div>
