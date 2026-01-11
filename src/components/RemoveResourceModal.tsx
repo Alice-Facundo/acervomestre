@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { X, AlertTriangle } from "lucide-react";
+import { deleteRecurso } from "../services/api";
 
 interface RemoveResourceModalProps {
   isOpen: boolean;
   onClose: () => void;
   resourceTitle: string;
   resourceAuthor: string;
+  resourceId?: number;
   onConfirmRemove?: () => void;
 }
 
@@ -13,13 +16,34 @@ export function RemoveResourceModal({
   onClose, 
   resourceTitle,
   resourceAuthor,
+  resourceId,
   onConfirmRemove
 }: RemoveResourceModalProps) {
-  const handleRemove = () => {
-    if (onConfirmRemove) {
-      onConfirmRemove();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleRemove = async () => {
+    if (!resourceId) {
+      setError('ID do recurso não encontrado');
+      return;
     }
-    onClose();
+
+    setIsDeleting(true);
+    setError(null);
+
+    try {
+      await deleteRecurso(resourceId);
+      
+      if (onConfirmRemove) {
+        onConfirmRemove();
+      }
+      
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao remover recurso');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -60,19 +84,28 @@ export function RemoveResourceModal({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 p-6 border-t">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleRemove}
-            className="px-6 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded transition-colors"
-          >
-            Remover
-          </button>
+        <div className="p-6 border-t">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+              {error}
+            </div>
+          )}
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={onClose}
+              disabled={isDeleting}
+              className="px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleRemove}
+              disabled={isDeleting}
+              className="px-6 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded transition-colors disabled:opacity-50"
+            >
+              {isDeleting ? 'Removendo...' : 'Remover'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

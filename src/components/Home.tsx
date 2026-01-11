@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Search, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ResourceCard } from './ResourceCard';
-import { ResourceModal } from './ResourceModal';
+import { AddResourceModal } from './AddResourceModal';
 import { RemoveResourceModal } from './RemoveResourceModal';
 import { AddToPlaylistModal } from './AddToPlaylistModal';
 import type { Resource } from './types';
@@ -249,7 +249,7 @@ export function Home() {
       </section>
 
       {/* Modals */}
-      <ResourceModal 
+      <AddResourceModal 
         isOpen={isResourceModalOpen}
         onClose={() => setIsResourceModalOpen(false)}
       />
@@ -259,6 +259,7 @@ export function Home() {
         onClose={() => setIsRemoveModalOpen(false)}
         resourceTitle={selectedResource?.title || ''}
         resourceAuthor={selectedResource?.author || ''}
+        resourceId={selectedResource?.id ? parseInt(selectedResource.id) : undefined}
         onConfirmRemove={handleConfirmRemove}
       />
       
@@ -266,6 +267,7 @@ export function Home() {
         isOpen={isAddToPlaylistModalOpen}
         onClose={() => setIsAddToPlaylistModalOpen(false)}
         resourceTitle={selectedResource?.title || ''}
+        resourceId={selectedResource?.id ? parseInt(selectedResource.id) : undefined}
         onAddToPlaylist={handleAddToPlaylist}
       />
     </div>
