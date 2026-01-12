@@ -25,6 +25,8 @@ Link aplicação: https://acervomestre-eight.vercel.app/
 - email: admin@acervomestre.com
 - senha: Admin@123
 
+Arquivo de testes: https://drive.google.com/drive/home
+
 ## Capturas de Tela
 
 ### Tela de Login
