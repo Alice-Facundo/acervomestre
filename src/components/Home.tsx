@@ -147,7 +147,6 @@ export function Home({ onPlaylistClick, onResourceClick }: HomeProps) {
           );
           setAllFilteredResources(mappedResources);
         } else {
-          // Ordenação explícita por ID (Mais Recentes)
           const sortedRecents = [...mappedResources].sort((a, b) => b.realId - a.realId);
           setRecentResources(sortedRecents);
           
@@ -164,6 +163,7 @@ export function Home({ onPlaylistClick, onResourceClick }: HomeProps) {
               resources: item.quantidade_recursos,
               bgColor: 'bg-teal-100',
               iconColor: 'text-teal-700',
+              visibility: item.visibilidade || 'Público'
             }));
             setHighlightedResources([...mappedPlaylists, ...highlights]);
           } else {
@@ -175,6 +175,36 @@ export function Home({ onPlaylistClick, onResourceClick }: HomeProps) {
       console.error(error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Funções para Playlists
+  const handleEditPlaylist = (playlist: Playlist) => {
+    console.log("Editar playlist:", playlist.id);
+    // Seria aberto um modal de edição aqui
+  };
+
+  const handleDeletePlaylist = async (playlist: Playlist) => {
+    const confirmed = window.confirm(`Deseja realmente excluir a playlist "${playlist.title}"?`);
+    if (!confirmed) return;
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      const numericId = playlist.id.replace(/\D/g, '');
+      const response = await fetch(`${API_URL}/playlists/delete/${numericId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        fetchContent();
+      } else {
+        alert("Erro ao excluir playlist.");
+      }
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -304,9 +334,6 @@ export function Home({ onPlaylistClick, onResourceClick }: HomeProps) {
               </div>
             ))}
           </div>
-          {allFilteredResources.length === 0 && (
-            <div className="text-center py-10 text-gray-500">Nenhum resultado encontrado.</div>
-          )}
         </section>
       ) : (
         <div className="space-y-12">
@@ -322,7 +349,12 @@ export function Home({ onPlaylistClick, onResourceClick }: HomeProps) {
                 {highlightedResources.slice(indices.highlighted, indices.highlighted + ITEMS_PER_PAGE).map((item) => (
                   <div key={item.id} onClick={() => handleCardClick(item as Resource)} className="cursor-pointer">
                     {item.isPlaylist ? (
-                      <PlaylistCard playlist={item as Playlist} onClick={() => onPlaylistClick(item.id.replace(/\D/g, ''))} />
+                      <PlaylistCard 
+                        playlist={item as Playlist} 
+                        onClick={() => onPlaylistClick(item.id.replace(/\D/g, ''))}
+                        onEdit={handleEditPlaylist}
+                        onDelete={handleDeletePlaylist}
+                      />
                     ) : (
                       <ResourceCard 
                         resource={item as Resource} 
