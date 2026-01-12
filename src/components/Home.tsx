@@ -26,6 +26,7 @@ import { RemoveResourceModal } from './RemoveResourceModal';
 import type { Resource, Playlist } from './types';
 
 const API_URL = 'https://acervomestrebackend.onrender.com';
+
 const ITEMS_PER_PAGE = 4;
 
 interface Tag {
