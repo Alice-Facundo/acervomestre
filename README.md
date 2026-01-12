@@ -1,73 +1,69 @@
-# React + TypeScript + Vite
+# Acervo-Mestre
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![Logo do Projeto](/public/logo.jpeg)
 
-Currently, two official plugins are available:
+Uma aplicação web completa para gerenciamento de recursos educacionais, playlists e usuários. Desenvolvida com React, TypeScript e Vite para uma experiência moderna e responsiva.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Descrição
 
-## React Compiler
+O Acervo-Mestre é uma plataforma digital que permite aos usuários organizar e acessar recursos educacionais de forma eficiente. Com funcionalidades de criação de playlists, gerenciamento de recursos, perfis de usuário e painel administrativo, a aplicação facilita o compartilhamento e a descoberta de conteúdo educacional.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Funcionalidades
 
-## Expanding the ESLint configuration
+- **Autenticação de Usuários**: Login e cadastro seguro.
+- **Gerenciamento de Recursos**: Adicionar, editar e remover recursos educacionais.
+- **Playlists Personalizadas**: Criar e gerenciar playlists de recursos.
+- **Perfis de Usuário**: Visualizar e editar perfis pessoais.
+- **Painel Administrativo**: Gerenciar usuários e recursos do sistema.
+- **Interface Responsiva**: Design moderno com Tailwind CSS.
+- **Suporte a Metadados**: Gerenciamento detalhado de informações dos recursos.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Teste você mesmo
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Link aplicação: https://acervomestre-eight.vercel.app/
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- email: admin@acervomestre.com
+- senha: Admin@123
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Capturas de Tela
+
+### Tela de Login
+![Tela de Login](/public/login.png)
+
+### Página Inicial
+![Página Inicial](/public/telainicial.png)
+
+## Uso
+
+### Para Usuários
+
+1. **Cadastro/Login**: Você so pode acessar a plataforma caso seja adicionado. Depois so fazer login.
+2. **Explorar Recursos**: Navegue pela página inicial para ver recursos disponíveis.
+3. **Criar Playlists**: Organize recursos em playlists personalizadas.
+4. **Gerenciar Perfil**: Edite suas informações pessoais.
+
+### Para Administradores
+
+1. Acesse o painel administrativo.
+2. Gerencie usuários e recursos do sistema.
+
+## Tecnologias Utilizadas
+
+- **Frontend**:
+  - React
+  - TypeScript
+  - Vite
+  - Tailwind CSS
+
+## Estrutura do Projeto
+
 ```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+src/
+├── components/          # Componentes reutilizáveis
+│   ├── ui/             # Componentes de UI (botões, modais, etc.)
+│   └── figma/          # Componentes específicos
+├── modals/             # Modais da aplicação
+├── services/           # Serviços de API
+├── styles/             # Estilos globais
+└── assets/             # Imagens e recursos estáticos
 ```
