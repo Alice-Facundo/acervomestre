@@ -6,6 +6,7 @@ import { ResourceModal } from '../modals/ResourceModal';
 import { AddResourceModal } from '../modals/AddResourceModal';
 import { RemoveResourceModal } from './RemoveResourceModal';
 import { AddToPlaylistModal } from '../modals/AddToPlaylistModal';
+import { EditProfileModal } from '../modals/EditProfileModal';
 import type { Resource, Playlist } from './types';
 
 const profileImage = "https://ui-avatars.com/api/?name=Carlos+Santos&background=0f766e&color=fff";
@@ -19,15 +20,17 @@ interface User {
   perfil: string;
   role?: string;
   url_perfil?: string;
+  data_nascimento?: string;
 }
 
 interface ProfileProps {
   onPlaylistClick: (playlistId: string) => void;
   onResourceClick: (resourceId: string) => void;
+  onUserUpdate?: () => void;
   user: User | null;
 }
 
-export function Profile({ onPlaylistClick, onResourceClick, user }: ProfileProps) {
+export function Profile({ onPlaylistClick, onResourceClick, onUserUpdate, user }: ProfileProps) {
   const [activeTab, setActiveTab] = useState<'resources' | 'playlists'>('resources');
   
   const [myResources, setMyResources] = useState<Resource[]>([]);
@@ -37,6 +40,7 @@ export function Profile({ onPlaylistClick, onResourceClick, user }: ProfileProps
   const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isAddToPlaylistModalOpen, setIsAddToPlaylistModalOpen] = useState(false);
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
 
   const getUserName = () => user?.nome || user?.name || 'Usuário';
@@ -145,6 +149,12 @@ export function Profile({ onPlaylistClick, onResourceClick, user }: ProfileProps
     console.log('Adicionando recurso à playlist:', selectedResource, playlistId);
   };
 
+  const handleEditProfileSuccess = () => {
+    if (onUserUpdate) {
+      onUserUpdate();
+    }
+  };
+
   const getNumericId = (id: string | undefined) => {
     if (!id) return undefined;
     const numericPart = id.replace(/\D/g, '');
@@ -164,7 +174,7 @@ export function Profile({ onPlaylistClick, onResourceClick, user }: ProfileProps
             <img
               src={user?.url_perfil || profileImage}
               alt={getUserName()}
-              className="w-24 h-24 rounded-full object-cover"
+              className="w-24 h-24 rounded-full object-cover border border-gray-100"
             />
             <div>
               <h1 className="text-2xl font-semibold text-gray-900 mb-1">{getUserName()}</h1>
@@ -172,7 +182,10 @@ export function Profile({ onPlaylistClick, onResourceClick, user }: ProfileProps
               <p className="text-sm text-gray-500">{getUserProfile()}</p>
             </div>
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+          <button 
+            onClick={() => setIsEditProfileModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
             <Edit className="w-4 h-4" />
             Editar Perfil
           </button>
@@ -281,6 +294,13 @@ export function Profile({ onPlaylistClick, onResourceClick, user }: ProfileProps
         resourceTitle={selectedResource?.title || ''}
         resourceId={getNumericId(selectedResource?.id)}
         onAddToPlaylist={handleAddToPlaylist}
+      />
+      
+      <EditProfileModal
+        isOpen={isEditProfileModalOpen}
+        onClose={() => setIsEditProfileModalOpen(false)}
+        user={user}
+        onSuccess={handleEditProfileSuccess}
       />
     </div>
   );

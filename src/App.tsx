@@ -8,7 +8,6 @@ import { ResourceDetail } from './components/ResourceDetail';
 import { Login } from './components/Login';
 import { ActivateAccount } from './components/ActivateAccount';
 import { PasswordModal } from './modals/PasswordModal';
-import { AddToPlaylistModal } from './modals/AddToPlaylistModal'; // Importe o modal aqui
 
 export type View = 'home' | 'profile' | 'admin' | 'playlist' | 'resource';
 
@@ -22,6 +21,7 @@ export interface User {
   perfil: string;
   role?: string;
   url_perfil?: string;
+  data_nascimento?: string;
 }
 
 export default function App() {
@@ -31,10 +31,6 @@ export default function App() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showActivateAccount, setShowActivateAccount] = useState(false);
   
-  // Estados para Playlist Modal
-  const [isAddToPlaylistOpen, setIsAddToPlaylistOpen] = useState(false);
-  const [playlistResourceData, setPlaylistResourceData] = useState<{id: number, title: string} | null>(null);
-
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>('');
   const [selectedResourceId, setSelectedResourceId] = useState<string>('');
 
@@ -95,7 +91,6 @@ export default function App() {
     alert('Senha alterada com sucesso! Faça login com a nova senha.');
   };
 
-  // Funções de Navegação e Modais
   const handlePlaylistClick = (playlistId: string) => {
     setSelectedPlaylistId(playlistId);
     setCurrentView('playlist');
@@ -106,10 +101,9 @@ export default function App() {
     setCurrentView('resource');
   };
 
-  // Função para abrir o modal vindo do ResourceDetail
-  const handleOpenPlaylistModal = (id: number, title: string) => {
-    setPlaylistResourceData({ id, title });
-    setIsAddToPlaylistOpen(true);
+  const handleUserUpdate = () => {
+    const token = localStorage.getItem('accessToken');
+    if (token) fetchCurrentUser(token);
   };
 
   if (!isAuthenticated) {
@@ -155,6 +149,7 @@ export default function App() {
           <Profile 
             onPlaylistClick={handlePlaylistClick} 
             onResourceClick={handleResourceClick}
+            onUserUpdate={handleUserUpdate}
             user={currentUser}
           />
         )}
@@ -173,19 +168,9 @@ export default function App() {
           <ResourceDetail 
             resourceId={selectedResourceId}
             onBack={() => setCurrentView('home')} 
-            onAddToPlaylistClick={handleOpenPlaylistModal} // Passando a função para o detalhe
           />
         )}
       </main>
-
-      {/* Modais Globais */}
-      <AddToPlaylistModal 
-        isOpen={isAddToPlaylistOpen}
-        onClose={() => setIsAddToPlaylistOpen(false)}
-        resourceTitle={playlistResourceData?.title || ''}
-        resourceId={playlistResourceData?.id}
-      />
-
       <PasswordModal
         isOpen={showPasswordModal}
         onClose={() => setShowPasswordModal(false)}
