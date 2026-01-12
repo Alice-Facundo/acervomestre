@@ -92,6 +92,7 @@ export function Home({ onPlaylistClick, onResourceClick }: HomeProps) {
         ...(token ? { 'Authorization': `Bearer ${token}` } : {})
       };
 
+      // Uso de timestamp (Date.now) para garantir que o navegador busque dados novos do servidor
       const response = await fetch(`${API_URL}/recursos/get_all?page=1&per_page=100&t=${Date.now()}`, { headers });
       
       if (response.ok) {
@@ -120,7 +121,7 @@ export function Home({ onPlaylistClick, onResourceClick }: HomeProps) {
 
           return {
             id: `res-${item.id}`,
-            realId: Number(item.id),
+            realId: Number(item.id), // Preservamos o ID numérico para ordenação cronológica
             title: item.titulo,
             author: item.autor?.nome || 'Professor',
             subject: item.tags?.[0]?.nome || 'Geral',
@@ -147,6 +148,7 @@ export function Home({ onPlaylistClick, onResourceClick }: HomeProps) {
           );
           setAllFilteredResources(mappedResources);
         } else {
+          // IMPLEMENTAÇÃO DA ORDENAÇÃO: Maior ID (mais recente) primeiro
           const sortedRecents = [...mappedResources].sort((a, b) => b.realId - a.realId);
           setRecentResources(sortedRecents);
           
@@ -181,7 +183,6 @@ export function Home({ onPlaylistClick, onResourceClick }: HomeProps) {
   // Funções para Playlists
   const handleEditPlaylist = (playlist: Playlist) => {
     console.log("Editar playlist:", playlist.id);
-    // Seria aberto um modal de edição aqui
   };
 
   const handleDeletePlaylist = async (playlist: Playlist) => {
@@ -334,6 +335,9 @@ export function Home({ onPlaylistClick, onResourceClick }: HomeProps) {
               </div>
             ))}
           </div>
+          {allFilteredResources.length === 0 && (
+            <div className="text-center py-10 text-gray-500">Nenhum resultado encontrado.</div>
+          )}
         </section>
       ) : (
         <div className="space-y-12">

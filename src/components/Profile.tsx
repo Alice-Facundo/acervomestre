@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Edit, Plus } from 'lucide-react';
+import { Edit, Plus, X } from 'lucide-react';
 import { ResourceCard } from './ResourceCard';
 import { PlaylistCard } from './PlaylistCard';
 import { ResourceModal } from '../modals/ResourceModal';
@@ -12,6 +12,79 @@ import type { Resource, Playlist } from './types';
 const profileImage = "https://ui-avatars.com/api/?name=Carlos+Santos&background=0f766e&color=fff";
 const API_URL = 'https://acervomestrebackend.onrender.com';
 
+// --- COMPONENTE INTERNO PARA EVITAR ERRO DE IMPORTAÇÃO ---
+function CreatePlaylistModal({ isOpen, onClose, onSuccess }: any) {
+  const [titulo, setTitulo] = useState('');
+  const [descricao, setDescricao] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`${API_URL}/playlists/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ titulo, descricao })
+      });
+      if (response.ok) {
+        setTitulo('');
+        setDescricao('');
+        onSuccess();
+        onClose();
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
+      <div className="bg-white rounded-lg w-full max-w-md shadow-xl overflow-hidden">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h2 className="text-xl font-bold text-gray-900">Criar Nova Playlist</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X /></button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>
+            <input
+              type="text" required value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
+              placeholder="Ex: Materiais de Redação"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+            <textarea
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
+              rows={3} placeholder="Dê uma breve descrição..."
+            />
+          </div>
+          <button
+            type="submit" disabled={isLoading}
+            className="w-full bg-teal-700 text-white py-2 rounded-lg font-medium hover:bg-teal-800 transition-colors disabled:opacity-50"
+          >
+            {isLoading ? 'Criando...' : 'Criar Playlist'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// --- COMPONENTE PROFILE ---
 interface User {
   id: number;
   nome?: string;
@@ -41,6 +114,7 @@ export function Profile({ onPlaylistClick, onResourceClick, onUserUpdate, user }
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isAddToPlaylistModalOpen, setIsAddToPlaylistModalOpen] = useState(false);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  const [isCreatePlaylistModalOpen, setIsCreatePlaylistModalOpen] = useState(false); 
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
 
   const getUserName = () => user?.nome || user?.name || 'Usuário';
@@ -117,7 +191,7 @@ export function Profile({ onPlaylistClick, onResourceClick, onUserUpdate, user }
           id: `pl-${item.id}`,
           title: item.titulo,
           resources: item.quantidade_recursos,
-          visibility: 'Público',
+          visibility: item.visibilidade || 'Público',
           isPlaylist: true
         }));
         setMyPlaylists(userPlaylistsList);
@@ -127,6 +201,33 @@ export function Profile({ onPlaylistClick, onResourceClick, onUserUpdate, user }
       console.error(error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Funções para os botões do Card de Playlist
+  const handleEditPlaylist = (playlist: Playlist) => {
+    console.log("Editar playlist:", playlist.id);
+    // Aqui você abriria o modal de edição de playlist futuramente
+  };
+
+  const handleDeletePlaylist = async (playlist: Playlist) => {
+    if (!window.confirm(`Tem certeza que deseja excluir a playlist "${playlist.title}"?`)) return;
+    
+    try {
+      const token = localStorage.getItem('accessToken');
+      const numericId = playlist.id.replace(/\D/g, '');
+      const response = await fetch(`${API_URL}/playlists/delete/${numericId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        fetchUserContent();
+      } else {
+        alert("Erro ao excluir playlist.");
+      }
+    } catch (error) {
+      console.error("Erro ao deletar playlist:", error);
     }
   };
 
@@ -141,7 +242,6 @@ export function Profile({ onPlaylistClick, onResourceClick, onUserUpdate, user }
   };
 
   const handleConfirmRemove = () => {
-    console.log('Removendo recurso:', selectedResource);
     if (user?.id) fetchUserContent();
   };
 
@@ -176,7 +276,7 @@ export function Profile({ onPlaylistClick, onResourceClick, onUserUpdate, user }
               alt={getUserName()}
               className="w-24 h-24 rounded-full object-cover border border-gray-100"
             />
-            <div>
+            <div className="text-left">
               <h1 className="text-2xl font-semibold text-gray-900 mb-1">{getUserName()}</h1>
               <p className="text-gray-600 mb-1">{getUserEmail()}</p>
               <p className="text-sm text-gray-500">{getUserProfile()}</p>
@@ -225,7 +325,10 @@ export function Profile({ onPlaylistClick, onResourceClick, onUserUpdate, user }
             Adicionar Recurso
           </button>
         ) : (
-          <button className="flex items-center gap-2 px-4 py-2 bg-teal-700 text-white rounded-lg hover:bg-teal-800 transition-colors">
+          <button 
+            onClick={() => setIsCreatePlaylistModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-teal-700 text-white rounded-lg hover:bg-teal-800 transition-colors"
+          >
             <Plus className="w-5 h-5" />
             Criar Playlist
           </button>
@@ -260,7 +363,13 @@ export function Profile({ onPlaylistClick, onResourceClick, onUserUpdate, user }
             myPlaylists.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {myPlaylists.map((playlist) => (
-                  <PlaylistCard key={playlist.id} playlist={playlist} onClick={() => onPlaylistClick(playlist.id.replace(/\D/g, ''))} />
+                  <PlaylistCard 
+                    key={playlist.id} 
+                    playlist={playlist} 
+                    onClick={() => onPlaylistClick(playlist.id.replace(/\D/g, ''))} 
+                    onEdit={handleEditPlaylist}
+                    onDelete={handleDeletePlaylist}
+                  />
                 ))}
               </div>
             ) : (
@@ -272,14 +381,16 @@ export function Profile({ onPlaylistClick, onResourceClick, onUserUpdate, user }
         </>
       )}
 
-      <ResourceModal 
-        isOpen={isResourceModalOpen}
-        onClose={() => setIsResourceModalOpen(false)}
+      {/* MODAIS */}
+      <ResourceModal isOpen={isResourceModalOpen} onClose={() => setIsResourceModalOpen(false)} />
+      <AddResourceModal isOpen={isResourceModalOpen} onClose={() => setIsResourceModalOpen(false)} />
+      
+      <CreatePlaylistModal 
+        isOpen={isCreatePlaylistModalOpen} 
+        onClose={() => setIsCreatePlaylistModalOpen(false)} 
+        onSuccess={fetchUserContent} 
       />
-      <AddResourceModal 
-        isOpen={isResourceModalOpen}
-        onClose={() => setIsResourceModalOpen(false)}
-      />
+
       <RemoveResourceModal
         isOpen={isRemoveModalOpen}
         onClose={() => setIsRemoveModalOpen(false)}
