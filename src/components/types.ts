@@ -1,3 +1,5 @@
+import React from 'react';
+
 export interface Resource {
   id: string;
   title: string;
@@ -5,7 +7,7 @@ export interface Resource {
   subject: string;
   year: string;
   type: string;
-  icon: any;
+  icon: string;
   bgColor: string;
   iconColor: string;
   views?: number;
@@ -14,6 +16,7 @@ export interface Resource {
   isPlaylist?: boolean;
   is_destaque?: boolean;
   estrutura?: 'UPLOAD' | 'URL' | 'NOTA';
+  resources?: number;
 }
 
 export interface Playlist {
@@ -25,7 +28,7 @@ export interface Playlist {
   subject?: string;
   year?: string;
   type?: string;
-  icon?: any;
+  icon?: string;
   bgColor?: string;
   iconColor?: string;
   isPlaylist?: boolean;

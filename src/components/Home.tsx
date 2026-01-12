@@ -3,16 +3,24 @@ import {
   Search, 
   Plus, 
   ChevronLeft, 
-  ChevronRight,
-  Video,       
-  FileText,    
-  Link as LinkIcon, 
-  StickyNote,   
-  File          
+  ChevronRight
 } from 'lucide-react';
 import { ResourceCard } from './ResourceCard';
 import { PlaylistCard } from './PlaylistCard';
 import { AddResourceModal } from '../modals/AddResourceModal';
+
+interface ApiResourceItem {
+  id: string;
+  titulo: string;
+  autor?: { nome: string };
+  tags?: { nome: string }[];
+  mime_type?: string;
+  visualizacoes: number;
+  downloads: number;
+  curtidas: number;
+  is_destaque: boolean;
+  estrutura: 'UPLOAD' | 'URL' | 'NOTA';
+}
 import { AddToPlaylistModal } from '../modals/AddToPlaylistModal';
 import { RemoveResourceModal } from './RemoveResourceModal';
 import type { Resource, Playlist } from './types';
@@ -99,7 +107,7 @@ export function Home({ onPlaylistClick, onResourceClick }: HomeProps) {
         const resData = await response.json();
         const rawItems = resData.items || [];
 
-        let mappedResources = rawItems.map((item: any) => {
+        let mappedResources = rawItems.map((item: ApiResourceItem) => {
           let type = 'Documento';
           let style = { bgColor: 'bg-blue-50', iconColor: 'text-blue-400', icon: 'file' };
 
@@ -125,7 +133,7 @@ export function Home({ onPlaylistClick, onResourceClick }: HomeProps) {
             title: item.titulo,
             author: item.autor?.nome || 'Professor',
             subject: item.tags?.[0]?.nome || 'Geral',
-            allTags: item.tags?.map((t: any) => t.nome) || [],
+            allTags: item.tags?.map((t: { nome: string }) => t.nome) || [],
             year: 'Ensino Médio',
             type: type,
             icon: style.icon,
@@ -273,7 +281,6 @@ export function Home({ onPlaylistClick, onResourceClick }: HomeProps) {
       </div>
     </div>
   );
-
   return (
     <div className="p-8 w-full min-h-screen">
       <div className="bg-white rounded-lg shadow-sm p-6 mb-8">

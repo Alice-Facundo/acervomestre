@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   ArrowLeft, 
   Play, 
   GripVertical, 
   Eye, 
   Heart, 
-  Download, 
   FileText, 
   Video, 
   Link as LinkIcon, 
@@ -55,13 +54,7 @@ export function PlaylistDetail({ playlistId, onBack, onResourceClick }: Playlist
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  useEffect(() => {
-    if (playlistId) {
-      fetchPlaylistData();
-    }
-  }, [playlistId]);
-
-  const fetchPlaylistData = async () => {
+  const fetchPlaylistData = useCallback(async () => {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
@@ -77,7 +70,7 @@ export function PlaylistDetail({ playlistId, onBack, onResourceClick }: Playlist
         const data = await response.json();
         // Ordena os recursos localmente com base no campo 'ordem' retornado pela API
         if (data.recursos) {
-          data.recursos.sort((a: any, b: any) => a.ordem - b.ordem);
+          data.recursos.sort((a: PlaylistResourceItem, b: PlaylistResourceItem) => a.ordem - b.ordem);
         }
         setPlaylist(data);
       } else if (response.status === 401) {
@@ -88,7 +81,13 @@ export function PlaylistDetail({ playlistId, onBack, onResourceClick }: Playlist
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [playlistId]);
+
+  useEffect(() => {
+    if (playlistId) {
+      fetchPlaylistData();
+    }
+  }, [playlistId, fetchPlaylistData]);
 
   const handleSaveOrder = async () => {
     if (!playlist) return;

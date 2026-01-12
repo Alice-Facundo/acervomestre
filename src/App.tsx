@@ -26,21 +26,13 @@ export interface User {
 
 export default function App() {
   const [currentView, setCurrentView] = useState<View>('home');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('accessToken'));
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showActivateAccount, setShowActivateAccount] = useState(false);
   
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>('');
   const [selectedResourceId, setSelectedResourceId] = useState<string>('');
-
-  useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      setIsAuthenticated(true);
-      fetchCurrentUser(token);
-    }
-  }, []);
 
   const fetchCurrentUser = async (token: string) => {
     try {
@@ -57,6 +49,13 @@ export default function App() {
       console.error(error);
     }
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      fetchCurrentUser(token);
+    }
+  }, []);
 
   const handleLogin = () => {
     setIsAuthenticated(true);
